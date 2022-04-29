@@ -1,3 +1,3 @@
-#SP2022 Data Science Lab Final Project
+# SP2022 Data Science Lab Final Project
 
-###SnakeAI
+### SnakeAI
