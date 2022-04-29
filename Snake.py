@@ -169,13 +169,14 @@ class SnakeGame:
 
     # check for collision with food
     def food_collision(self):
-        if self.snake.head == self.food.point:
-            self.score += 1
-            self.food.move()
-            if self.food.point in self.snake.body:
-                self.food_collision()
-            self.snake.change_color()
-        else:
+        pop = True
+        for block in self.snake.body:
+            if block == self.food.point:
+                self.score += 1
+                self.food.move()
+                self.snake.change_color()
+                pop = False
+        if pop:
             self.snake.body.pop()
 
     # update background image
