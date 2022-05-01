@@ -31,6 +31,8 @@ BLACK = (0,0,0)
 COLORS = [(BLUE1, BLUE2), (YELLOW1, YELLOW2), (GREEN1, GREEN2)]
 
 BLOCK_SIZE = 20
+
+# controls speed of the game. Higher number means higher speed
 SPEED = 20
 
 class Food:
@@ -82,7 +84,7 @@ class Snake:
 
         self.move()
 
-    # move snake body if key pressed
+    # move snake head if key pressed
     def move(self):
         x = self.head.x
         y = self.head.y
@@ -96,14 +98,18 @@ class Snake:
             y -= BLOCK_SIZE
             
         self.head = Point(x, y)
+
+        # we move snake head by adding a block in front of original head.
         self.body.insert(0, self.head)
 
     # draw each block of snake's body
     def draw(self):
         for i, pt in enumerate(self.body):
+            # snake head is always red
             if i == 0:
                 pygame.draw.rect(self.screen, RED1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
                 pygame.draw.rect(self.screen, RED2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
+            # snake body's color    
             else:    
                 pygame.draw.rect(self.screen, self.color[0], pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
                 pygame.draw.rect(self.screen, self.color[1], pygame.Rect(pt.x+4, pt.y+4, 12, 12))
@@ -156,7 +162,7 @@ class SnakeGame:
             game_over = True
             return game_over, self.score
             
-        # 3. place new food or just move
+        # 3. Check if snake head is on the food
         self.food_collision()
         
         # 4. update ui and clock
@@ -169,12 +175,17 @@ class SnakeGame:
     # check for collision with food
     def food_collision(self):
         pop = True
+        # uses for loop because sometimes food spawns on snake body
         for block in self.snake.body:
             if block == self.food.point:
                 self.score += 1
                 self.food.move()
+
+                # change snake body color (except head) after eating food
                 self.snake.change_color()
                 pop = False
+                
+        # pop snake tail if snake didn't eat food in this cycle. 
         if pop:
             self.snake.body.pop()
 
@@ -183,6 +194,7 @@ class SnakeGame:
         self.display.blit(pygame.image.load('image/troll1.jpg'), (0,0))
 
     # call each sprite's draw method
+    # comment self.update_background and uncomment self.display.fill(black) for black background
     def _update_ui(self):
         # self.display.fill(BLACK)
         self.update_background()
