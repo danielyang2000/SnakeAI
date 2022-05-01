@@ -3,8 +3,7 @@ import pygame
 import random
 from enum import Enum
 from collections import namedtuple
-
-
+import config
 
 pygame.init()
 font = pygame.font.Font('arial.ttf', 25)
@@ -195,9 +194,21 @@ class SnakeGame:
         text = font.render("Score: " + str(self.score), True, WHITE)
         self.display.blit(text, [0, 0])
         pygame.display.flip()
-        
+
+def wait_for_key():
+    while True:
+        event = pygame.event.poll()
+        for event in pygame.event.get():
+            if event.type == pygame.KEYUP:
+                return
+            else:
+                continue
+
 if __name__ == '__main__':
     game = SnakeGame()
+
+    if config.GAME_MODE == 'human':
+        wait_for_key()
     
     # game loop
     while True:
@@ -208,5 +219,7 @@ if __name__ == '__main__':
         
     print('Final Score', score)
         
+    if config.GAME_MODE == 'human':
+        wait_for_key()
         
     pygame.quit()
