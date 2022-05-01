@@ -102,9 +102,11 @@ class Snake:
     # draw each block of snake's body
     def draw(self):
         for i, pt in enumerate(self.body):
+            # snake head is always red
             if i == 0:
                 pygame.draw.rect(self.screen, RED1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
                 pygame.draw.rect(self.screen, RED2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
+            # snake body collectively change color after eating food    
             else:    
                 pygame.draw.rect(self.screen, self.color[0], pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
                 pygame.draw.rect(self.screen, self.color[1], pygame.Rect(pt.x+4, pt.y+4, 12, 12))
@@ -170,6 +172,7 @@ class SnakeGame:
     # check for collision with food
     def food_collision(self):
         pop = True
+        # uses for loop because sometimes food spawns on snake body
         for block in self.snake.body:
             if block == self.food.point:
                 self.score += 1
@@ -184,6 +187,7 @@ class SnakeGame:
         self.display.blit(pygame.image.load('image/troll1.jpg'), (0,0))
 
     # call each sprite's draw method
+    # comment self.update_background and uncomment self.display.fill(black) for black background
     def _update_ui(self):
         # self.display.fill(BLACK)
         self.update_background()
