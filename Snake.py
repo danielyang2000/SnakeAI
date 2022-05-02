@@ -4,6 +4,7 @@ import random
 from enum import Enum
 from collections import namedtuple
 import config
+from config import *
 
 pygame.init()
 font = pygame.font.Font('arial.ttf', 25)
@@ -13,6 +14,7 @@ class Direction(Enum):
     LEFT = 2
     UP = 3
     DOWN = 4
+    QUIT = 5
     
 Point = namedtuple('Point', 'x, y')
 
@@ -40,10 +42,15 @@ class Food:
         self.x = 200
         self.y = 200
         self.screen = screen
-        self.image = pygame.image.load("image/Cookie.jpg").convert()
         self.point = Point(self.x, self.y)
+        
+        if screen != None:
+            self.image = pygame.image.load("image/Cookie.jpg").convert()
 
     def draw(self):
+        if (self.screen == None):
+            return
+
         self.screen.blit(self.image, (self.x, self.y))
         
     # move food to another position
@@ -57,32 +64,17 @@ class Snake:
         self.screen = screen
         self.direction = Direction.RIGHT
 
-        self.head = Point(self.screen.get_width()/2, self.screen.get_height()/2)
+        if (self.screen == None):
+            self.head = Point(320, 240)
+        else:
+            self.head = Point(self.screen.get_width()/2, self.screen.get_height()/2)
+
         self.body = [self.head, 
                       Point(self.head.x-BLOCK_SIZE, self.head.y),
                       Point(self.head.x-(2*BLOCK_SIZE), self.head.y)]
         
         self.color_index = 0
         self.color = COLORS[self.color_index]
-
-    # check for key press
-    def walk(self):
-        event = pygame.event.poll()
-        if event.type != pygame.NOEVENT :  
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT and self.direction != Direction.RIGHT:
-                    self.direction = Direction.LEFT
-                elif event.key == pygame.K_RIGHT and self.direction != Direction.LEFT:
-                    self.direction = Direction.RIGHT
-                elif event.key == pygame.K_UP and self.direction != Direction.DOWN:
-                    self.direction = Direction.UP
-                elif event.key == pygame.K_DOWN and self.direction != Direction.UP:
-                    self.direction = Direction.DOWN
-
-        self.move()
 
     # move snake head if key pressed
     def move(self):
@@ -104,6 +96,8 @@ class Snake:
 
     # draw each block of snake's body
     def draw(self):
+        if (self.screen == None): 
+            return
         for i, pt in enumerate(self.body):
             # snake head is always red
             if i == 0:
@@ -135,12 +129,16 @@ class Snake:
 
 class SnakeGame:
     
-    def __init__(self, w=640, h=480):
-        self.w = w
-        self.h = h
-        # init display
-        self.display = pygame.display.set_mode((self.w, self.h))
-        pygame.display.set_caption('Snake')
+    def __init__(self, w=640, h=480, gui=True):
+        self.gui = gui
+        self.display = None
+        if (self.gui):
+            self.w = w
+            self.h = h
+            # init display
+            self.display = pygame.display.set_mode((self.w, self.h))
+            pygame.display.set_caption('Snake')
+            
         self.clock = pygame.time.Clock()
         
         self.snake = Snake(self.display)
@@ -150,11 +148,22 @@ class SnakeGame:
         self.food = Food(self.display)
         self.food.draw()
 
+    def reset(self):
+        self.snake = Snake(self.display)
+        self.food = Food(self.display)
+        self.food.draw()
+        self.score = 0
 
     # game cycle    
-    def play_step(self):
+    def play_step(self, movement_direction):
         # 1. collect user input and move
-        self.snake.walk()
+        self.snake.direction = movement_direction
+
+        if (movement_direction == Direction.QUIT):
+            pygame.quit()
+            exit()
+
+        self.snake.move()
 
         # 2. check if game over (snake hit boundary or itself?)
         game_over = False
@@ -191,12 +200,17 @@ class SnakeGame:
 
     # update background image
     def update_background(self):
+        if (self.display == None):
+            return
+
         self.display.blit(pygame.image.load('image/troll1.jpg'), (0,0))
 
     # call each sprite's draw method
     # comment self.update_background and uncomment self.display.fill(black) for black background
     def _update_ui(self):
-        # self.display.fill(BLACK)
+        if (self.display == None):
+            return
+
         self.update_background()
         
         self.snake.draw()
@@ -211,27 +225,60 @@ def wait_for_key():
     while True:
         event = pygame.event.poll()
         for event in pygame.event.get():
-            if event.type == pygame.KEYUP:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.KEYUP:
                 return
             else:
                 continue
 
-if __name__ == '__main__':
-    game = SnakeGame()
+def get_arrow_keys_direction(game):
+    current_direction = game.snake.direction
+    event = pygame.event.poll()
 
-    if config.GAME_MODE == 'human':
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_LEFT and current_direction != Direction.RIGHT:
+            return Direction.LEFT
+        elif event.key == pygame.K_RIGHT and current_direction != Direction.LEFT:
+            return Direction.RIGHT
+        elif event.key == pygame.K_UP and current_direction != Direction.DOWN:
+            return Direction.UP
+        elif event.key == pygame.K_DOWN and current_direction != Direction.UP:
+            return Direction.DOWN
+
+    if event.type == pygame.QUIT:
+        return Direction.QUIT
+    
+    return current_direction
+
+if __name__ == '__main__':
+    from AgentAI import Agent
+
+    game = SnakeGame(gui=config.DISPLAY_GUI)
+    agent = Agent(game)
+
+    if config.GAME_MODE == Player.HUMAN:
         wait_for_key()
     
-    # game loop
-    while True:
-        game_over, score = game.play_step()
-        
-        if game_over == True:
-            break
-        
-    print('Final Score', score)
-        
-    if config.GAME_MODE == 'human':
+        # game loop
+        while True:
+            movement_input = get_arrow_keys_direction(game)
+            game_over, score = game.play_step(movement_input)
+            
+            if game_over == True:
+                break
+            
+        print('Final Score', score)
+
         wait_for_key()
+    elif config.GAME_MODE == Player.AI_TRAIN:
+        # train ai
+        agent.train()
+        pass
+    elif config.GAME_MODE == Player.AI_DEMO:
+        # demo ai
+        agent.demo()
+        pass
         
     pygame.quit()
