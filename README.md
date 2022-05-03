@@ -3,7 +3,17 @@
 # SnakeAI
 
 ## INSTALL
-The snake game requires PyGame module
+Please install the modules listed in `requirements.txt` with the following command:
 ```python
-pip install pygame
+pip install -r requirements.txt
+```
+## RUN
+To manually play the snake game:
+```python
+python Human_Snake.py
+```
+
+Using AI to play the snake game (currently doesn't train):
+```python
+python Snake.py
 ```

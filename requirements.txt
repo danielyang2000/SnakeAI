@@ -1,0 +1,7 @@
+regex
+pygame
+numpy
+typing
+torch
+matplotlib
+IPython
