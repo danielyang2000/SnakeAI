@@ -17,3 +17,4 @@ Using AI to play the snake game (currently doesn't train):
 ```python
 python Snake.py
 ```
+#### please note that c in `config.py` cannot be capitalized on GitHub, so please manually capitalize 'c' after cloning this repo
