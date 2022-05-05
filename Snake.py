@@ -52,12 +52,18 @@ class Snake:
         self.screen_w = screen_w
         self.screen_h = screen_h
 
-        self.direction = Direction.RIGHT
+        randint = random.randint(0, 3)
+        if randint == 0:
+            self.direction = Direction.UP
+        elif randint == 1:
+            self.direction = Direction.DOWN
+        elif randint == 2:
+            self.direction = Direction.LEFT
+        elif randint == 3:
+            self.direction = Direction.RIGHT
 
-        if (self.screen == None):
-            self.head = Point(320, 240)
-        else:
-            self.head = Point(self.screen_w/2, self.screen_h/2)
+        # randomize snake's head position
+        self.head = Point(random.randint(0, MAP_WIDTH-1)*BLOCK_SIZE, random.randint(0, MAP_HEIGHT-1)*BLOCK_SIZE)
 
         self.body = [self.head, 
                       Point(self.head.x-BLOCK_SIZE, self.head.y),
