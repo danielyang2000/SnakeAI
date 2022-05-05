@@ -22,8 +22,10 @@ Point = namedtuple('Point', 'x, y')
 
 class Food:
     def __init__(self, screen, screen_w, screen_h):
-        self.x = 200
-        self.y = 200
+        # initialize food to a random position on the screen
+        self.x = random.randint(0, (screen_w-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
+        self.y = random.randint(0, (screen_h-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
+
         self.screen = screen
         self.screen_w = screen_w
         self.screen_h = screen_h
@@ -96,10 +98,13 @@ class Snake:
                 pygame.draw.rect(self.screen, self.color[0], pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
                 pygame.draw.rect(self.screen, self.color[1], pygame.Rect(pt.x+4, pt.y+4, 12, 12))
 
+    def is_out_of_bounds(self):
+        return self.head.x > self.screen_w - BLOCK_SIZE or self.head.x < 0 or self.head.y > self.screen_h - BLOCK_SIZE or self.head.y < 0
+
     # snake collide with itself or boundary?
     def is_collision(self):
         # hits boundary
-        if self.head.x > self.screen_w - BLOCK_SIZE or self.head.x < 0 or self.head.y > self.screen_h - BLOCK_SIZE or self.head.y < 0:
+        if self.is_out_of_bounds():
             return True
 
         # hits itself
@@ -109,10 +114,8 @@ class Snake:
         return False
 
     def is_collision_up(self):
-        # is there danger above the snake?
-        if self.head.y < BLOCK_SIZE:
+        if self.is_out_of_bounds() or self.head.y < BLOCK_SIZE:
             return True
-        
         # check if body above
         up_point = Point(self.head.x, self.head.y - BLOCK_SIZE)
         if up_point in self.body:
@@ -121,8 +124,7 @@ class Snake:
         return False
 
     def is_collision_down(self):
-        # is there danger below the snake?
-        if self.head.y >= self.screen_h - BLOCK_SIZE:
+        if self.is_out_of_bounds() or self.head.y >= self.screen_h - BLOCK_SIZE:
             return True
         
         # check if body below
@@ -133,8 +135,7 @@ class Snake:
         return False
     
     def is_collision_left(self):
-        # is there danger left of the snake?
-        if self.head.x < BLOCK_SIZE:
+        if self.is_out_of_bounds() or self.head.x < BLOCK_SIZE:
             return True
         
         # check if body left
@@ -145,8 +146,7 @@ class Snake:
         return False
     
     def is_collision_right(self):
-        # is there danger right of the snake?
-        if self.head.x >= self.screen_w - BLOCK_SIZE:
+        if self.is_out_of_bounds() or self.head.x >= self.screen_w - BLOCK_SIZE:
             return True
         
         # check if body right
@@ -253,7 +253,9 @@ class SnakeGame:
         if (self.display == None):
             return
 
-        self.display.blit(pygame.image.load('image/troll1.jpg'), (0,0))
+        # self.display.blit(pygame.image.load('image/troll1.jpg'), (0,0))
+        # make black background
+        self.display.fill(BLACK)
 
     # call each sprite's draw method
     # comment self.update_background and uncomment self.display.fill(black) for black background

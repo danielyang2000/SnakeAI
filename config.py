@@ -32,7 +32,7 @@ COLORS = [(BLUE1, BLUE2), (YELLOW1, YELLOW2), (GREEN1, GREEN2)]
 BLOCK_SIZE = 20
 
 # controls speed of the game. Higher number means higher speed
-SPEED = 9999
+SPEED = 1000
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000

@@ -1,5 +1,7 @@
 
 from typing import final
+
+from regex import D
 from Snake import Direction
 from Utils import plot
 import numpy as np
@@ -17,8 +19,12 @@ class Agent:
         self.epsilon = 0 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(12, 256, 4)
+        self.model = Linear_QNet(11, 256, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
+
+        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cpu")
+        self.model.to(self.device)
 
     def train(self):
         plot_scores = []
@@ -80,19 +86,66 @@ class Agent:
         # 12. food down
         # in future, can add map data or snake travel history
 
+        collision_front = None
+        collision_left = None
+        collision_right = None
+
+        food_left = None
+        food_right = None
+        food_forward = None
+        food_behind = None
+
+        if self.game.snake.direction.value == Direction.UP.value:
+            collision_front = self.game.snake.is_collision_up()
+            collision_left = self.game.snake.is_collision_left()
+            collision_right = self.game.snake.is_collision_right()
+
+            food_left = self.game.food.x <= self.game.snake.head.x
+            food_right = self.game.food.x > self.game.snake.head.x
+            food_forward = self.game.food.y <= self.game.snake.head.y
+            food_behind = self.game.food.y > self.game.snake.head.y
+        elif self.game.snake.direction.value == Direction.DOWN.value:
+            collision_front = self.game.snake.is_collision_down()
+            collision_left = self.game.snake.is_collision_right()
+            collision_right = self.game.snake.is_collision_left()
+
+            food_left = self.game.food.x > self.game.snake.head.x
+            food_right = self.game.food.x <= self.game.snake.head.x
+            food_forward = self.game.food.y > self.game.snake.head.y
+            food_behind = self.game.food.y <= self.game.snake.head.y
+        elif self.game.snake.direction.value == Direction.LEFT.value:
+            collision_front = self.game.snake.is_collision_left()
+            collision_left = self.game.snake.is_collision_down()
+            collision_right = self.game.snake.is_collision_up()
+
+            food_left = self.game.food.y > self.game.snake.head.y
+            food_right = self.game.food.y <= self.game.snake.head.y
+            food_forward = self.game.food.x <= self.game.snake.head.x
+            food_behind = self.game.food.x > self.game.snake.head.x
+        elif self.game.snake.direction.value == Direction.RIGHT.value:
+            collision_front = self.game.snake.is_collision_right()
+            collision_left = self.game.snake.is_collision_up()
+            collision_right = self.game.snake.is_collision_down()
+
+            food_left = self.game.food.y <= self.game.snake.head.y
+            food_right = self.game.food.y > self.game.snake.head.y
+            food_forward = self.game.food.x > self.game.snake.head.x
+            food_behind = self.game.food.x <= self.game.snake.head.x
+
         state = [
-            self.game.snake.is_collision_up(),
-            self.game.snake.is_collision_down(),
-            self.game.snake.is_collision_left(),
-            self.game.snake.is_collision_right(),
+            collision_front,
+            collision_left,
+            collision_right,
             self.game.snake.direction.value == Direction.UP.value,
             self.game.snake.direction.value == Direction.DOWN.value,
             self.game.snake.direction.value == Direction.LEFT.value,
             self.game.snake.direction.value == Direction.RIGHT.value,
-            self.game.food.x < self.game.snake.head.x,
-            self.game.food.x > self.game.snake.head.x,
-            self.game.food.y < self.game.snake.head.y,
-            self.game.food.y > self.game.snake.head.y
+
+            # Food location 
+            self.game.food.x < self.game.snake.head.x,  # food left
+            self.game.food.x > self.game.snake.head.x,  # food right
+            self.game.food.y < self.game.snake.head.y,  # food up
+            self.game.food.y > self.game.snake.head.y  # food down
         ]
         
         return np.array(state, dtype=int)
@@ -100,12 +153,50 @@ class Agent:
     def get_action(self, state):
         # random moves: tradeoff exploration / exploitation
         self.epsilon = 80 - self.n_games
-        if random.randint(0, 100) < self.epsilon:
-            move = random.randint(0, 3)
+        if random.randint(0, 200) < self.epsilon:
+            snake_direction = self.game.snake.direction
+            move = -1
+            while move == -1:
+                move = random.randint(0, 3)
+                if snake_direction.value == Direction.UP.value and move == Direction.DOWN.value or \
+                    snake_direction.value == Direction.DOWN.value and move == Direction.UP.value or \
+                    snake_direction.value == Direction.LEFT.value and move == Direction.RIGHT.value or \
+                    snake_direction.value == Direction.RIGHT.value and move == Direction.LEFT.value:
+                    move = -1
+
         else:
-            state0 = torch.tensor(state, dtype=torch.float)
+            state0 = torch.tensor(state, dtype=torch.float, device=self.device)
             prediction = self.model(state0)
             move = torch.argmax(prediction).item()
+
+            if self.game.snake.direction.value == Direction.UP.value:
+                if move == 0:
+                    move = Direction.UP.value
+                elif move == 1:
+                    move = Direction.LEFT.value
+                elif move == 2:
+                    move = Direction.RIGHT.value
+            elif self.game.snake.direction.value == Direction.DOWN.value:
+                if move == 0:
+                    move = Direction.DOWN.value
+                elif move == 1:
+                    move = Direction.RIGHT.value
+                elif move == 2:
+                    move = Direction.LEFT.value
+            elif self.game.snake.direction.value == Direction.LEFT.value:
+                if move == 0:
+                    move = Direction.LEFT.value
+                elif move == 1:
+                    move = Direction.DOWN.value
+                elif move == 2:
+                    move = Direction.UP.value
+            elif self.game.snake.direction.value == Direction.RIGHT.value:
+                if move == 0:
+                    move = Direction.RIGHT.value
+                elif move == 1:
+                    move = Direction.UP.value
+                elif move == 2:
+                    move = Direction.DOWN.value
 
         final_move = None
         if move == 0:

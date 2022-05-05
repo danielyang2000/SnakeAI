@@ -33,10 +33,12 @@ class QTrainer:
         self.criterion = nn.MSELoss()
 
     def train_step(self, state, action, reward, next_state, done):
-        state = torch.tensor(state, dtype=torch.float)
-        next_state = torch.tensor(next_state, dtype=torch.float)
-        action = torch.tensor(action, dtype=torch.long)
-        reward = torch.tensor(reward, dtype=torch.float)
+        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cpu")
+        state = torch.tensor(state, dtype=torch.float, device=device)
+        next_state = torch.tensor(next_state, dtype=torch.float, device=device)
+        action = torch.tensor(action, dtype=torch.long, device=device)
+        reward = torch.tensor(reward, dtype=torch.float, device=device)
         # (n, x)
 
         if len(state.shape) == 1:
