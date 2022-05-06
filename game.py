@@ -48,6 +48,11 @@ class SnakeGameAI:
         x = random.randint(0, (self.w-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
         y = random.randint(0, (self.h-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
         self.food = Point(x, y)
+
+        # check if snake fills up screen
+        if len(self.snake) == MAP_WIDTH*MAP_HEIGHT:
+            return
+
         if self.food in self.snake:
             self._place_food()
 
@@ -67,9 +72,16 @@ class SnakeGameAI:
         # 3. check if game over
         reward = -0.1
         game_over = False
-        if self.is_collision() or self.frame_iteration > 100*len(self.snake):
+        if self.is_collision() \
+            or self.frame_iteration > 100*len(self.snake):
             game_over = True
             reward = -10
+            return reward, game_over, self.score
+
+        if len(self.snake) == MAP_WIDTH*MAP_HEIGHT:
+            game_over = True
+            self.score += 1
+            reward = 10
             return reward, game_over, self.score
 
         # 4. place new food or just move
