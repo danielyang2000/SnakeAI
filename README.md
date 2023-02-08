@@ -8,6 +8,9 @@ The video game Snake has been around for decades, giving people plenty of time t
 
 We explored this with a method of reinforcement learning, called Deep Q Learning, to train a Neural Network to select optimal moves for Snake. This will require a baseline Snake environment (`Snake.py`), an Agent (`AgentAI.py`), AKA our AI “player”, and an underlying neural net model (`Model.py`) for the training.
 
+## CREDIT
+This repo is based off Patrick Loeber's (https://youtu.be/PJl4iabBEz0) example code. All credit goes to him. We used and modified his example code to learn more about DeepQ Learning and Reinforcement Learning. 
+
 ## INSTALL
 Please install the modules listed in `requirements.txt` with the following command:
 ```python
